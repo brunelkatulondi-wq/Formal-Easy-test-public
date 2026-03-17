@@ -4,11 +4,31 @@ import styled from 'styled-components';
 import Button from '../components/ui/Button';
 import Logo from '../components/ui/Logo';
 import BackButton from '../components/ui/BackButton';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const PaymentSuccessPage = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const dossierId = params.get('dossierId');
+  const [status, setStatus] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState<boolean>(!!dossierId);
+
+  React.useEffect(() => {
+    if (!dossierId) return;
+    const fetchStatus = async () => {
+      try {
+        const { data } = await axios.get(`/api/dossiers/${dossierId}`);
+        setStatus(data.status);
+      } catch (e) {
+        toast.error("Impossible de rafraîchir le dossier (session expirée ?)");
+      } finally {
+        setLoading(false);
+        localStorage.removeItem('selectedPack');
+      }
+    };
+    fetchStatus();
+  }, [dossierId]);
 
   return (
     <Wrapper>
@@ -20,7 +40,10 @@ const PaymentSuccessPage = () => {
         <h1>Paiement validé</h1>
         <p>Merci ! Votre paiement a été reçu. Nous lançons la formalisation de votre dossier.</p>
         {dossierId && (
-          <Info>Référence dossier : <strong>{dossierId}</strong></Info>
+          <Info>
+            <div>Référence dossier : <strong>{dossierId}</strong></div>
+            <div>Statut : <strong>{loading ? 'Mise à jour...' : status || '—'}</strong></div>
+          </Info>
         )}
         <Actions>
           {dossierId && (

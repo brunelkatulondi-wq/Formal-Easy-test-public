@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { ArrowLeft, Download, Clock, Send, ShieldCheck, MessageCircle, FileText } from 'lucide-react';
 import Button from '../../components/ui/Button';
@@ -34,6 +34,19 @@ const DossierDetailPage = () => {
       });
       return data;
     }
+  });
+
+  const retryPayment = useMutation({
+    mutationFn: async () => {
+      const { data } = await axios.post('/api/payments/create-session', { dossierId: id }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+      return data;
+    },
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+    onError: () => toast.error("Impossible de relancer le paiement. Réessayez.")
   });
 
   // Charger les messages initiaux
@@ -180,6 +193,25 @@ const DossierDetailPage = () => {
           <Badge type="info" style={{padding: '8px 16px', fontSize: '14px', borderRadius: '100px'}}>{dossier.status.replace(/_/g, ' ')}</Badge>
         </div>
       </Header>
+
+      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '10px', flexWrap: 'wrap'}}>
+        <Link to="/dashboard">
+          <Button variant="ghost"><ArrowLeft size={16} /> Retour</Button>
+        </Link>
+        <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+          <Button variant="secondary" onClick={handleDownload}><Download size={16} /> Télécharger les statuts</Button>
+          <Button variant="outline" onClick={() => setShowSignModal(true)}><PenTool size={16} /> Signer</Button>
+          {['PAY_PENDING', 'DRAFT'].includes(dossier.status) && (
+            <Button 
+              variant="secondary" 
+              disabled={retryPayment.isPending}
+              onClick={() => retryPayment.mutate()}
+            >
+              {retryPayment.isPending ? 'Redirection...' : 'Relancer le paiement'}
+            </Button>
+          )}
+        </div>
+      </div>
 
       {!isAdmin && (dossier.status === 'PAY_PENDING' || dossier.status === 'READY_FOR_SIGNATURE') && (
         <motion.div 

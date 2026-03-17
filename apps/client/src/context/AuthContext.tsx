@@ -62,6 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore network/logout errors
     }
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('selectedPack');
     setUser(null);
   };
 

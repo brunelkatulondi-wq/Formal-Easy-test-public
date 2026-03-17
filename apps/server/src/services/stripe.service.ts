@@ -37,7 +37,7 @@ export const createCheckoutSession = async (userId: string, dossierId: string, p
     ],
     mode: 'payment',
     success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&dossierId=${dossierId}`,
-    cancel_url: `${process.env.FRONTEND_URL}/payment/cancel`,
+    cancel_url: `${process.env.FRONTEND_URL}/payment/cancel?dossierId=${dossierId}`,
     metadata: {
       userId,
       dossierId,
