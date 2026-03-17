@@ -1,0 +1,12 @@
+{
+  "name": "formal-easy-drc-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace=formal-easy-server",
+    "dev:client": "npm run dev --workspace=formal-easy-client",
+    "build": "npm run build --workspaces"
+  }
+}

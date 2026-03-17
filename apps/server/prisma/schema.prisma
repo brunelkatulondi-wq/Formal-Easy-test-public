@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         String   @default("CLIENT")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  dossiers     Dossier[]
+  messages     Message[]
+  refreshTokens RefreshToken[]
+}
+
+model Dossier {
+  id                  String      @id @default(uuid())
+  reference           String      @unique
+  companyName         String
+  legalForm           String   
+  activityDescription String?
+  socialObject        String?     // L'objet rédigé par l'IA
+  capital             Int        
+  diaspora            Boolean
+  pack                String   
+  status              String      @default("DRAFT")
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  userId              String
+  user                User        @relation(fields: [userId], references: [id])
+  events              Event[]
+  documents           Document[]
+  messages            Message[]
+  agentId             String?
+  agent               Agent?      @relation(fields: [agentId], references: [id])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  type        String
+  payload     String   // JSON stringifié pour SQLite
+  createdAt   DateTime @default(now())
+  dossierId   String
+  dossier     Dossier  @relation(fields: [dossierId], references: [id])
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  name        String
+  url         String   
+  createdAt   DateTime @default(now())
+  dossierId   String
+  dossier     Dossier  @relation(fields: [dossierId], references: [id])
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  fromUserId  String?  
+  toUserId    String?  
+  content     String
+  sentAt      DateTime @default(now())
+  dossierId   String?
+  dossier     Dossier? @relation(fields: [dossierId], references: [id])
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model Agent {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String?
+  email       String?
+  city        String   
+  active      Boolean  @default(true)
+  dossiers    Dossier[]
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  tokenHash  String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  revoked    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+}
