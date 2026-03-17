@@ -1,0 +1,34 @@
+# Render Blueprint: deploy API + Postgres
+databases:
+  - name: formal-easy-db
+    databaseName: formaleasy
+    user: formaleasy
+
+services:
+  - type: web
+    name: formal-easy-api
+    env: node
+    plan: free
+    branch: master
+    rootDir: apps/server
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/index.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: formal-easy-db
+          property: connectionString
+      - key: FRONTEND_URL
+        value: https://formal-easy.vercel.app,http://localhost:5173
+      - key: JWT_SECRET
+        generateValue: true
+      - key: REFRESH_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        value: sk_test_dummy
+      - key: STRIPE_WEBHOOK_SECRET
+        value: whsec_dummy
+      - key: OPENAI_API_KEY
+        sync: false  # set manually in dashboard
+      - key: PORT
+        value: 4000

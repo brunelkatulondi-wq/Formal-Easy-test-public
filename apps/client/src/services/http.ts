@@ -1,8 +1,9 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-// Base config (use absolute paths already prefixed with /api in code)
+// Base config (build absolute base URL for prod, default to same-origin for dev + Vite proxy)
 axios.defaults.withCredentials = true;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 
 // Inject access token from localStorage
 axios.interceptors.request.use((config) => {

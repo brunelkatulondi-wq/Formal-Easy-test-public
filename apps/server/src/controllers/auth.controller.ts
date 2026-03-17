@@ -96,10 +96,11 @@ async function issueTokens(res: Response, user: any) {
 }
 
 function cookieOptions() {
+  const allowCrossSite = process.env.NODE_ENV === 'production' && !(process.env.FRONTEND_URL || '').includes('localhost');
   return {
     httpOnly: true,
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: allowCrossSite ? 'none' as const : 'lax' as const,
+    secure: allowCrossSite,
     path: '/api/auth',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };

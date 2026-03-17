@@ -8,3 +8,6 @@ coverage/
 .turbo/
 .parcel-cache/
 *.log
+*.err
+*.db
+apps/server/prisma/dev.db
