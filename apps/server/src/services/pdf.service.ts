@@ -1,6 +1,7 @@
 // apps/server/src/services/pdf.service.ts
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { generateStatutesText, FormData } from '../utils/legalEngine';
+import { generateFullStatutesDraft, hasRealKey } from './ai.service';
 
 export async function generateStatutsPdf(dossierData: any): Promise<Uint8Array> {
   // 1. Générer le texte brut via le moteur
@@ -14,7 +15,24 @@ export async function generateStatutsPdf(dossierData: any): Promise<Uint8Array> 
     associes: [], 
   };
   
-  const text = generateStatutesText(formData);
+  let text = generateStatutesText(formData);
+
+  // Si une clé OpenAI est dispo, tenter la génération complète des statuts
+  if (hasRealKey) {
+    try {
+      text = await generateFullStatutesDraft({
+        type: dossierData.legalForm || 'SARL',
+        denomination: dossierData.companyName || 'LA SOCIÉTÉ',
+        siegeSocial: formData.siegeSocial,
+        capitalSocialCDF: formData.capitalSocialCDF,
+        objetSocial: formData.objetSocial,
+        gerant: formData.gerant,
+      });
+    } catch (e) {
+      // fallback silencieux sur le template statique
+      text = generateStatutesText(formData);
+    }
+  }
 
   // 2. Créer le document PDF
   const pdfDoc = await PDFDocument.create();

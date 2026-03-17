@@ -1,7 +1,7 @@
 // apps/server/src/services/ai.service.ts
 import OpenAI from 'openai';
 
-const hasRealKey = Boolean(process.env.OPENAI_API_KEY && !/dummy|fake/i.test(process.env.OPENAI_API_KEY));
+export const hasRealKey = Boolean(process.env.OPENAI_API_KEY && !/dummy|fake/i.test(process.env.OPENAI_API_KEY));
 const openai = hasRealKey
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
@@ -58,4 +58,51 @@ Contexte:
     console.error('[AI] fallback due to error:', e);
     return buildFallback(activityDescription, meta);
   }
+};
+
+// Génère des statuts complets (pas seulement l'objet social)
+export const generateFullStatutesDraft = async (formData: {
+  type: string;
+  denomination: string;
+  siegeSocial: string;
+  capitalSocialCDF: number;
+  objetSocial: string;
+  gerant: string;
+}) => {
+  if (!openai) {
+    throw new Error('OpenAI non disponible'); // laisser le call site gérer le fallback
+  }
+
+  const { type, denomination, siegeSocial, capitalSocialCDF, objetSocial, gerant } = formData;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    temperature: 0.4,
+    messages: [
+      {
+        role: "system",
+        content: `Tu es un juriste OHADA. Rédige des statuts complets et concis pour une société en RDC, en format texte brut (pas de markdown), avec articles numérotés.`
+      },
+      {
+        role: "user",
+        content: `
+Forme: ${type}
+Dénomination: ${denomination}
+Siège: ${siegeSocial}
+Capital (CDF): ${capitalSocialCDF}
+Gérant/Président: ${gerant}
+Objet social à intégrer et développer: ${objetSocial}
+
+Attendus:
+- En-tête avec le nom de la société.
+- Articles classiques: Forme, Objet, Dénomination, Siège, Durée, Capital (avec mention des parts sans détailler la répartition), Gérance/Direction, Assemblées, Affectation des résultats, Exercice social, Cession de parts, Dissolution.
+- Style juridique OHADA clair, concis (max 2-3 lignes par article).
+- Pas d'information de répartition si inconnue; indique "répartition entre associés selon actes séparés" si nécessaire.
+- Ajoute une clause de généralité.
+`
+      }
+    ],
+  });
+
+  return response.choices[0].message.content || objetSocial;
 };
