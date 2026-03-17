@@ -29,7 +29,7 @@ const QuestionnairePage = () => {
     activityDescription: '',
     socialObject: '',
     capital: 1000,
-    pack: 'Essentiel'
+    pack: 'ESSENTIEL' as 'ESSENTIEL' | 'CONFORT' | 'PREMIUM'
   });
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -58,17 +58,27 @@ const QuestionnairePage = () => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.activityDescription || formData.activityDescription.trim().length < 10) {
+      return toast.error("D\u00e9crivez votre activit\u00e9 (10 caract\u00e8res minimum).");
+    }
+
     try {
-      const { data } = await axios.post('/api/dossiers', formData, {
+      const payload = {
+        ...formData,
+        activityDescription: formData.activityDescription || undefined,
+        socialObject: formData.socialObject || undefined,
+      };
+
+      const { data } = await axios.post('/api/dossiers', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
-      toast.success("Dossier créé ! Redirection vers le paiement...");
+      toast.success("Dossier cr\u00e9\u00e9 ! Redirection vers le paiement...");
       const session = await axios.post('/api/payments/create-session', { dossierId: data.id }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
       window.location.href = session.data.url;
     } catch (err) {
-      toast.error("Erreur lors de la création du dossier.");
+      toast.error("Erreur lors de la cr\u00e9ation du dossier ou du paiement.");
     }
   };
 
@@ -192,21 +202,21 @@ const QuestionnairePage = () => {
                <h2>Choisissez votre Pack de création</h2>
                <div style={{display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px'}}>
                   {[
-                    {name: 'Essentiel', desc: 'Statuts certifiés + Dossier GUCE prêt à imprimer', price: '149$'},
-                    {name: 'Confort', desc: 'Essentiel + Dépôt physique par nos agents + Retrait RCCM', price: '299$'},
-                    {name: 'Premium', desc: 'Gestion Totale + NIF + Conseil Juridique + Domiciliation 1 mois', price: '549$'}
+                    {code: 'ESSENTIEL', label: 'Essentiel', desc: 'Statuts certifi\u00e9s + Dossier GUCE pr\u00eat à imprimer', price: '249$'},
+                    {code: 'CONFORT', label: 'Confort', desc: 'Essentiel + D\u00e9p\u00f4t physique par nos agents + Retrait RCCM', price: '349$'},
+                    {code: 'PREMIUM', label: 'Premium', desc: 'Gestion Totale + NIF + Conseil Juridique + Domiciliation 1 mois', price: '569$'},
                   ].map(p => (
                     <PackCard 
-                      key={p.name} 
-                      selected={formData.pack === p.name}
-                      onClick={() => setFormData({...formData, pack: p.name})}
+                      key={p.code} 
+                      selected={formData.pack === p.code}
+                      onClick={() => setFormData({...formData, pack: p.code as typeof formData.pack})}
                     >
                       <div className="pack-info">
-                         <h3>{p.name}</h3>
+                         <h3>{p.label}</h3>
                          <p>{p.desc}</p>
                       </div>
                       <div className="price">{p.price}</div>
-                      {formData.pack === p.name && <CheckCircle size={24} color="#2CC4C0" className="check" />}
+                      {formData.pack === p.code && <CheckCircle size={24} color="#2CC4C0" className="check" />}
                     </PackCard>
                   ))}
                </div>
