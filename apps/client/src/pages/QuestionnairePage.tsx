@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Button from '../components/ui/Button';
 import Logo from '../components/ui/Logo';
@@ -21,6 +21,9 @@ const steps = [
 const QuestionnairePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const initialPack = ((location.state as any)?.pack || params.get('pack') || localStorage.getItem('selectedPack') || 'ESSENTIEL').toString().toUpperCase() as 'ESSENTIEL' | 'CONFORT' | 'PREMIUM';
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     companyName: '',
@@ -29,9 +32,10 @@ const QuestionnairePage = () => {
     activityDescription: '',
     socialObject: '',
     capital: 1000,
-    pack: 'ESSENTIEL' as 'ESSENTIEL' | 'CONFORT' | 'PREMIUM'
+    pack: initialPack
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleNext = () => {
     if (step === 1 && !formData.companyName) return toast.error("Veuillez entrer le nom de votre société.");
@@ -63,6 +67,7 @@ const QuestionnairePage = () => {
     }
 
     try {
+      setIsSubmitting(true);
       const payload = {
         ...formData,
         activityDescription: formData.activityDescription || undefined,
@@ -79,6 +84,8 @@ const QuestionnairePage = () => {
       window.location.href = session.data.url;
     } catch (err) {
       toast.error("Erreur lors de la cr\u00e9ation du dossier ou du paiement.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -209,7 +216,10 @@ const QuestionnairePage = () => {
                     <PackCard 
                       key={p.code} 
                       selected={formData.pack === p.code}
-                      onClick={() => setFormData({...formData, pack: p.code as typeof formData.pack})}
+                      onClick={() => {
+                        localStorage.setItem('selectedPack', p.code);
+                        setFormData({...formData, pack: p.code as typeof formData.pack});
+                      }}
                     >
                       <div className="pack-info">
                          <h3>{p.label}</h3>
@@ -236,7 +246,14 @@ const QuestionnairePage = () => {
               Continuer <ArrowRight size={18} />
             </Button>
           ) : (
-            <Button variant="secondary" style={{marginLeft: 'auto'}} onClick={handleSubmit}>Valider et Payer via Stripe</Button>
+            <Button 
+              variant="secondary" 
+              style={{marginLeft: 'auto'}} 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Création en cours..." : "Valider et Payer via Stripe"}
+            </Button>
           )}
         </Actions>
       </FormCard>

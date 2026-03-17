@@ -12,7 +12,7 @@ import Button from '../../components/ui/Button';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 
 const ClientDashboard = () => {
-  const { data: dossiers, isLoading } = useQuery({
+  const { data: dossiers, isLoading, isError, refetch } = useQuery({
     queryKey: ['my-dossiers'],
     queryFn: async () => {
       const { data } = await axios.get('/api/dossiers/me', {
@@ -49,6 +49,12 @@ const ClientDashboard = () => {
 
       {isLoading ? (
         <Loading>Chargement de vos dossiers...</Loading>
+      ) : isError ? (
+        <EmptyState>
+          <FileText size={48} color="#9CA3AF" />
+          <p>Impossible de charger vos dossiers (connexion ou session expirée).</p>
+          <Button variant="secondary" onClick={() => refetch()}>Réessayer</Button>
+        </EmptyState>
       ) : dossiers?.length === 0 ? (
         <EmptyState>
           <FileText size={48} color="#9CA3AF" />

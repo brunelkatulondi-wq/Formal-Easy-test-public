@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const schema = z.object({
   name: z.string().min(2, "Nom trop court"),
@@ -22,6 +22,8 @@ type SignupData = z.infer<typeof schema>;
 const SignupPage = () => {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedPack = (location.state as any)?.pack || localStorage.getItem('selectedPack');
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<SignupData>({
     resolver: zodResolver(schema)
   });
@@ -30,7 +32,7 @@ const SignupPage = () => {
     try {
       await registerUser(data);
       toast.success("Compte créé avec succès !");
-      navigate('/questionnaire');
+      navigate('/questionnaire', { state: { pack: selectedPack } });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Erreur lors de l'inscription");
     }

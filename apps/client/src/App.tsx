@@ -13,6 +13,9 @@ const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'));
 const FAQPage = React.lazy(() => import('./pages/FAQPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
 const QuestionnairePage = React.lazy(() => import('./pages/QuestionnairePage'));
+const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage'));
+const PaymentCancelPage = React.lazy(() => import('./pages/PaymentCancelPage'));
+const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 const ClientDashboard = React.lazy(() => import('./pages/dashboard/ClientDashboard'));
 const DossierDetailPage = React.lazy(() => import('./pages/dashboard/DossierDetailPage'));
 const AdminDashboard = React.lazy(() => import('./pages/dashboard/AdminDashboard'));
@@ -77,6 +80,8 @@ function App() {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/faq" element={<FAQPage />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
           <Route 
             path="/questionnaire" 
             element={
@@ -141,6 +146,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </Suspense>
         <Toaster position="top-right" />

@@ -3,7 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Check, Info, ShieldCheck, Zap, Star, ArrowRight, HelpCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../components/ui/Button';
 import Logo from '../components/ui/Logo';
 import BackButton from '../components/ui/BackButton';
@@ -14,6 +14,7 @@ const PricingPage = () => {
     legalAdvice: false,
     accounting: false
   });
+  const navigate = useNavigate();
   const [simPack, setSimPack] = React.useState<'Essentiel'|'Confort'|'Premium'>('Confort');
   const [simForm, setSimForm] = React.useState<'SARL'|'SAS'|'SA'|'SNC'|'EI'>('SARL');
 
@@ -95,6 +96,11 @@ const PricingPage = () => {
       cta: 'Choisir Premium'
     }
   ];
+
+  const selectPack = (packCode: 'ESSENTIEL' | 'CONFORT' | 'PREMIUM') => {
+    localStorage.setItem('selectedPack', packCode);
+    navigate('/signup', { state: { pack: packCode } });
+  };
 
   return (
     <PageWrapper>
@@ -221,15 +227,14 @@ const PricingPage = () => {
               <span className="amount">{calculateTotalPrice(pack.basePrice)}$</span>
             </div>
             <p className="description">{pack.description}</p>
-            <Link to="/signup">
-               <Button 
-                variant={pack.recommended ? 'secondary' : 'outline'} 
-                fullWidth
-                style={{ marginTop: '20px' }}
-              >
-                {pack.cta}
-              </Button>
-            </Link>
+            <Button 
+              variant={pack.recommended ? 'secondary' : 'outline'} 
+              fullWidth
+              style={{ marginTop: '20px' }}
+              onClick={() => selectPack(pack.name.toUpperCase() as any)}
+            >
+              {pack.cta}
+            </Button>
 
             <FeaturesList>
               {pack.features.map((f, i) => (
